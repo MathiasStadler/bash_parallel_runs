@@ -30,9 +30,13 @@ chmod +x "$script_name"
 ```bash <!-- markdownlint-disable-line code-block-style -->
 cat >>"$script_name"<<'EOF'
 
+sequential () {
 for thing in a b c  ; do 
    task "$thing"
 done
+}
+
+sequential
 EOF
 ```
 <!-- ktf -->
