@@ -4,6 +4,7 @@
 
 #!/usr/bin/env bash
 
+echo " pid of $0 =>  $$"
 
 # This is a special sleep function which returns the number of seconds slept as
 # the "error code" or return code" so that we can easily see that we are in
