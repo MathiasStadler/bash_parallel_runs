@@ -6,7 +6,8 @@
 # set: usage: set [-abefhkmnptuvxBCEHPT] [-o option-name] [--] [-] [arg ...]
 # spell-checker:enable
 
-set -euxo pipefail
+#set -euxo pipefail
+set -eo pipefail
 
 # Condition - Use only commands that are included in Bash, no external binaries :-)
 
@@ -28,17 +29,16 @@ trap "handle_error;exit 1" ERR
 function handle_error() {
 	# NO function arguments
 
-	# local function_name="${FUNCNAME[0]}"
-	# local function_caller="${FUNCNAME[1]}"
-	# log "${LINENO}" "$ERROR" "Call path => $function_caller->$function_name"
-    # echo "${LINENO}" "$ERROR" "Call path => $function_caller->$function_name"
-	
-	
-	# Get information about the error
+    # Get information about the error
 	local error_code=$?
 	local error_line=${BASH_LINENO[0]}
 	local error_command=$BASH_COMMAND
 
+	local function_name="${FUNCNAME[0]}"
+	local function_caller="${FUNCNAME[1]}"
+	# log "${LINENO}" "$ERROR" "Call path => $function_caller->$function_name"
+    echo "${LINENO}" "$ERROR" "Call path => $function_caller->$function_name"
+	
 	# echo  "TRAP => $ERROR => $$"
 
 	# Log the error details
@@ -53,12 +53,23 @@ function handle_error() {
 function kind_process () {
 
     # loop
-    echo "start function kind_process"
+    echo "start function kind_process $$"
     for (( ; ; ))
     do
     # echo "Pres CTRL+C to stop..."
     sleep 1
+    echo "start function kind_process $$"
+    
+    echo "finished function kind_process $$"
+    #echo "=> $(ps -ef |grep $$)"
+    ## shellcheck disable - ignore next one line 
+    ## shellcheck double necessary for correct parsing the file
+    # shellcheck disable=all
+    echo "$(ps -axo ppid=,pid=,cmd= |grep $$)"
+    
+
     done
+    return
 
 }
 
@@ -67,12 +78,13 @@ function kind_process () {
 # kind_process && kind_pid=$!
 kind_process &
 kind_pid=$!
-echo "pid $$"
-echo "kind pid $kind_pid"
+echo "parent process id =>$$"
+echo "kind   process id =>$kind_pid"
 
+# kill after 3 seconds
 sleep 3
 kill $kind_pid
-echo " ret code => $?"
+echo "kind process EXIT_CODE ( $kind_pid ) => $?"
 
 # Thank you very much. This saves me from rummaging around further
 # german - Vielen Dank. Das erspart mir das weitere Herumwühlen
