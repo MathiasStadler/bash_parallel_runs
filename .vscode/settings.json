@@ -3,6 +3,8 @@
         "erspart",
         "GPID",
         "Herumwühlen",
+        "mkfifo",
+        "mktemp",
         "pids",
         "procs",
         "SIGERR",

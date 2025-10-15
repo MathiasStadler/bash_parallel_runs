@@ -21,10 +21,23 @@ set -eo pipefail
 # trap ''  SIGQUIT
 # trap '' SIGTSTP
 
-trap "handle_error;exit 1" SIGINT
-trap "handle_error;exit 1"  SIGQUIT
-trap "handle_error;exit 1" SIGTSTP
-trap "handle_error;exit 1" ERR
+# trap "handle_error;exit 1" SIGINT
+# trap "handle_error;exit 1"  SIGQUIT
+# trap "handle_error;exit 1" SIGTSTP
+# trap "handle_error;exit 1" ERR
+
+
+
+# FOUND HERE - https://stackoverflow.com/questions/2175647/is-it-possible-to-detect-which-trap-signal-in-bash
+
+function trap_with_arg() {
+    func="$1" ; shift
+    for sig ; do
+        trap '$func' "$sig" "$sig"
+    done
+}
+
+trap_with_arg func_trap INT TERM EXIT
 
 function handle_error() {
 	# NO function arguments
@@ -48,10 +61,24 @@ function handle_error() {
 	return 1 
 }
 
+# native bash
+snore()
+{
+    local IFS
+    [[ -n "${_snore_fd:-}" ]] || { exec {_snore_fd}<> <(:); } 2>/dev/null ||
+    {
+        # workaround for MacOS and similar systems
+        local fifo
+        fifo=$(mktemp -u)
+        mkfifo -m 700 "$fifo"
+        exec {_snore_fd}<>"$fifo"
+        rm "$fifo"
+    }
+    read -r ${1:+-t "$1"} -u "$_snore_fd" || :
+}
 
 
 function kind_process () {
-
     # loop
     echo "start function kind_process $$"
     for (( ; ; ))
@@ -78,6 +105,12 @@ function kind_process () {
 # kind_process && kind_pid=$!
 kind_process &
 kind_pid=$!
+# locking subprocess - https://stackoverflow.com/questions/356100/how-to-wait-in-bash-for-several-subprocesses-to-finish-and-return-exit-code-0#356154
+# wait a little bit
+#(while true; do sleep 0.001; done) &
+# w/o sleep bash builtin
+snore 3
+
 echo "parent process id =>$$"
 echo "kind   process id =>$kind_pid"
 
